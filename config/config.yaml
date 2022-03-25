@@ -1,0 +1,26 @@
+##
+## Config file for opaproxy.go
+##
+## John D. Allen
+## Global Solutions Architect - Cloud, IoT, & Automation
+## A10 Networks, Inc.
+## March 2022
+##
+## Debug level 0 -> 10
+debug: 10
+## OPA Node info
+OPA_IP: 10.1.1.45.220
+OPA_PORT: 30181
+## Thunder ADC Node info
+THND_IP: 10.1.1.33
+THND_PORT: 443
+THND_USER: admin
+THND_PASSWD: a10
+THND_ID: thunder-1
+# yaml array, but Unmarshalled as JSON...yes, it works :)
+vs: [
+  {"name": "ws-vip", "policy": "bw"},
+  {"name": "ws-vip", "policy": "cps"}
+]
+# CHECK_INTERVAL is in seconds.
+CHECK_INTERVAL: 120
