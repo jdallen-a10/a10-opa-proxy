@@ -18,7 +18,6 @@ ADD go.* /app
 ADD opaproxy.go /app
 ADD ./config/config.yaml /app/config
 ADD Dockerfile /app
-ADD NOTES.md /app
 
 WORKDIR /app
 RUN CGO_ENABLED=0 GOOS=linux go build -o /app/opaproxy opaproxy.go
