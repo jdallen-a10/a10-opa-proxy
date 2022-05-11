@@ -152,17 +152,17 @@ func procLoop(d axapi.Device, config Configuration) {
 			//
 			// slb template server opa-policy-bw
 			//   bw-rate-limit 1000 resume 800 duration 20
-			// slb server 10.1.1.220 10.1.1.220
+			// slb server 44.147.45.220 44.147.45.220
 			// 	template server opa-policy-bw
 			// 	port 31721 tcp
-			// slb server 10.1.1.221 10.1.1.221
+			// slb server 44.147.45.221 44.147.45.221
 			// 	template server opa-policy-bw
 			// 	port 31721 tcp
 			// slb service-group ws-sg tcp
 			// 	health-check ws-mon
-			// 	member 10.1.1.220 31721
-			// 	member 10.1.1.221 31721
-			// slb virtual-server ws-vip 10.1.1.44
+			// 	member 44.147.45.220 31721
+			// 	member 44.147.45.221 31721
+			// slb virtual-server ws-vip 44.147.45.44
 			// 	port 80 http
 			// 		source-nat auto
 			// 		service-group ws-sg
@@ -171,23 +171,13 @@ func procLoop(d axapi.Device, config Configuration) {
 			// --
 			//
 			// Find the policy for the Thunder ID
-			opaurl := "http://" + config.OPA_IP + ":" + strconv.Itoa(config.OPA_PORT) + "/v1/data/net/bwnodes/" + config.THND_ID
-			out, err := callOPA(opaurl, "GET", "")
+			opaurl := "http://" + config.OPA_IP + ":" + strconv.Itoa(config.OPA_PORT) + "/v1/data/net/bwrate"
+			payld := "{\"input\":{\"node\":\"" + config.THND_ID + "\"}}"
+			out, err := callOPA(opaurl, "POST", payld)
 			if err != nil {
 				log.Warnf("No BW Policy found for Thunder node '%s'\n", config.THND_ID)
 			}
-			bwpolicy := gjson.Get(out, "result").Array()[0].Str
-			if config.Debug > 7 {
-				fmt.Printf("policy = %s\n", bwpolicy)
-			}
-			//
-			// Now get the rate
-			opaurl = "http://" + config.OPA_IP + ":" + strconv.Itoa(config.OPA_PORT) + "/v1/data/net/bw/" + bwpolicy
-			out, err = callOPA(opaurl, "GET", "")
-			if err != nil {
-				log.Warnf("No Rate found for BW Policy '%s'\n", bwpolicy)
-			}
-			bwrate := gjson.Get(out, "result").Array()[0].Int()
+			bwrate := gjson.Get(out, "result").Int()
 			if config.Debug > 7 {
 				fmt.Printf("rate = %d\n", bwrate)
 			}
@@ -238,18 +228,18 @@ func procLoop(d axapi.Device, config Configuration) {
 			// Template, once it has collected the CPS Policy from OPA, and then another API call to attach
 			// the Template to the SLB.  Once done, the 'slb' section will look something like this:
 			//
-			// slb server 10.1.1.220 10.1.1.220
+			// slb server 44.147.45.220 44.147.45.220
 			// 	port 31721 tcp
-			// slb server 10.1.1.221 10.1.1.221
+			// slb server 44.147.45.221 44.147.45.221
 			// 	port 31721 tcp
 			// slb service-group ws-sg tcp
 			// 	health-check ws-mon
-			// 	member 10.1.1.220 31721
-			// 	member 10.1.1.221 31721
+			// 	member 44.147.45.220 31721
+			// 	member 44.147.45.221 31721
 			// slb template virtual-server opa-policy-cps
 			//  conn-limit 200
 			//  conn-rate-limit 200
-			// slb virtual-server ws-vip 10.1.1.44
+			// slb virtual-server ws-vip 44.147.45.44
 			//  template virtual-server opa-policy-cps
 			// 	port 80 http
 			// 		source-nat auto
@@ -257,23 +247,13 @@ func procLoop(d axapi.Device, config Configuration) {
 			// --
 			//
 			// Find the policy for the Thunder ID
-			opaurl := "http://" + config.OPA_IP + ":" + strconv.Itoa(config.OPA_PORT) + "/v1/data/net/cpsnodes/" + config.THND_ID
-			out, err := callOPA(opaurl, "GET", "")
+			opaurl := "http://" + config.OPA_IP + ":" + strconv.Itoa(config.OPA_PORT) + "/v1/data/net/cpsrate"
+			payld := "{\"input\":{\"node\":\"" + config.THND_ID + "\"}}"
+			out, err := callOPA(opaurl, "POST", payld)
 			if err != nil {
 				log.Warnf("No CPS Policy found for Thunder node '%s'\n", config.THND_ID)
 			}
-			cpspolicy := gjson.Get(out, "result").Array()[0].Str
-			if config.Debug > 7 {
-				fmt.Printf("policy = %s\n", cpspolicy)
-			}
-			//
-			// Now get the rate
-			opaurl = "http://" + config.OPA_IP + ":" + strconv.Itoa(config.OPA_PORT) + "/v1/data/net/cps/" + cpspolicy
-			out, err = callOPA(opaurl, "GET", "")
-			if err != nil {
-				log.Warnf("No Rate found for CPS Policy '%s'\n", cpspolicy)
-			}
-			cpsrate := gjson.Get(out, "result").Array()[0].Int()
+			cpsrate := gjson.Get(out, "result").Int()
 			if config.Debug > 7 {
 				fmt.Printf("rate = %d\n", cpsrate)
 			}
